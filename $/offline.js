@@ -1,5 +1,5 @@
 ﻿{
-	"version": 1497273416,
+	"version": 1497877102,
 	"fileList": [
 		"data.js",
 		"c2runtime.js",
@@ -19,7 +19,6 @@
 		"images/voltar-sheet0.png",
 		"images/personagem-sheet0.png",
 		"images/personagem-sheet1.png",
-		"images/personagem-sheet2.png",
 		"images/home-sheet0.png",
 		"images/botaosim-sheet0.png",
 		"images/no-sheet0.png",
@@ -50,6 +49,8 @@
 		"images/asfalto-sheet0.png",
 		"images/buildingtiles_13-sheet0.png",
 		"images/sensorsaida3-sheet0.png",
+		"images/sensorfinal-sheet0.png",
+		"images/coin_gold-sheet0.png",
 		"media/341695__projectsu012__coins-1.m4a",
 		"media/341695__projectsu012__coins-1.ogg",
 		"media/394306__sirplus__supercheeseloop16.m4a",
