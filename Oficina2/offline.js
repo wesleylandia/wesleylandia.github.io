@@ -1,5 +1,9 @@
 ﻿{
+<<<<<<< HEAD
 	"version": 1505153726,
+=======
+	"version": 1504532188,
+>>>>>>> e53f35a2d3c7b25a86b2a83bc5e19a2b52bf0ad6
 	"fileList": [
 		"data.js",
 		"c2runtime.js",
@@ -112,7 +116,10 @@
 		"images/bilhete-sheet0.png",
 		"images/fosforo-sheet0.png",
 		"images/fundoespelho-sheet0.png",
+<<<<<<< HEAD
 		"images/tt-sheet0.png",
+=======
+>>>>>>> e53f35a2d3c7b25a86b2a83bc5e19a2b52bf0ad6
 		"media/167448__carmsie__pb-death-is-coming.m4a",
 		"media/167448__carmsie__pb-death-is-coming.ogg",
 		"media/339677__inspectorj__door-church-close-e.m4a",
@@ -121,10 +128,13 @@
 		"media/ptt-20170813-wa0161 (online-audio-converter.com).ogg",
 		"media/257357__brnck__button-click.m4a",
 		"media/257357__brnck__button-click.ogg",
+<<<<<<< HEAD
 		"media/click3.m4a",
 		"media/click3.ogg",
 		"media/switch4.m4a",
 		"media/switch4.ogg",
+=======
+>>>>>>> e53f35a2d3c7b25a86b2a83bc5e19a2b52bf0ad6
 		"media/260943__vdder-500__horror-drama-atmosfare.m4a",
 		"media/260943__vdder-500__horror-drama-atmosfare.ogg",
 		"icon-16.png",
