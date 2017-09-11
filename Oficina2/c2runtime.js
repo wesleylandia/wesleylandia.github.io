@@ -15162,326 +15162,6 @@ cr.shaders["multiply"] = {src: ["varying mediump vec2 vTex;",
 	parameters: [] }
 ;
 ;
-cr.plugins_.AJAX = function(runtime)
-{
-	this.runtime = runtime;
-};
-(function ()
-{
-	var isNWjs = false;
-	var path = null;
-	var fs = null;
-	var nw_appfolder = "";
-	var pluginProto = cr.plugins_.AJAX.prototype;
-	pluginProto.Type = function(plugin)
-	{
-		this.plugin = plugin;
-		this.runtime = plugin.runtime;
-	};
-	var typeProto = pluginProto.Type.prototype;
-	typeProto.onCreate = function()
-	{
-	};
-	pluginProto.Instance = function(type)
-	{
-		this.type = type;
-		this.runtime = type.runtime;
-		this.lastData = "";
-		this.curTag = "";
-		this.progress = 0;
-		this.timeout = -1;
-		isNWjs = this.runtime.isNWjs;
-		if (isNWjs)
-		{
-			path = require("path");
-			fs = require("fs");
-			var process = window["process"] || nw["process"];
-			nw_appfolder = path["dirname"](process["execPath"]) + "\\";
-		}
-	};
-	var instanceProto = pluginProto.Instance.prototype;
-	var theInstance = null;
-	window["C2_AJAX_DCSide"] = function (event_, tag_, param_)
-	{
-		if (!theInstance)
-			return;
-		if (event_ === "success")
-		{
-			theInstance.curTag = tag_;
-			theInstance.lastData = param_;
-			theInstance.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnAnyComplete, theInstance);
-			theInstance.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnComplete, theInstance);
-		}
-		else if (event_ === "error")
-		{
-			theInstance.curTag = tag_;
-			theInstance.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnAnyError, theInstance);
-			theInstance.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnError, theInstance);
-		}
-		else if (event_ === "progress")
-		{
-			theInstance.progress = param_;
-			theInstance.curTag = tag_;
-			theInstance.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnProgress, theInstance);
-		}
-	};
-	instanceProto.onCreate = function()
-	{
-		theInstance = this;
-	};
-	instanceProto.saveToJSON = function ()
-	{
-		return { "lastData": this.lastData };
-	};
-	instanceProto.loadFromJSON = function (o)
-	{
-		this.lastData = o["lastData"];
-		this.curTag = "";
-		this.progress = 0;
-	};
-	var next_request_headers = {};
-	var next_override_mime = "";
-	instanceProto.doRequest = function (tag_, url_, method_, data_)
-	{
-		if (this.runtime.isDirectCanvas)
-		{
-			AppMobi["webview"]["execute"]('C2_AJAX_WebSide("' + tag_ + '", "' + url_ + '", "' + method_ + '", ' + (data_ ? '"' + data_ + '"' : "null") + ');');
-			return;
-		}
-		var self = this;
-		var request = null;
-		var doErrorFunc = function ()
-		{
-			self.curTag = tag_;
-			self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnAnyError, self);
-			self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnError, self);
-		};
-		var errorFunc = function ()
-		{
-			if (isNWjs)
-			{
-				var filepath = nw_appfolder + url_;
-				if (fs["existsSync"](filepath))
-				{
-					fs["readFile"](filepath, {"encoding": "utf8"}, function (err, data) {
-						if (err)
-						{
-							doErrorFunc();
-							return;
-						}
-						self.curTag = tag_;
-						self.lastData = data.replace(/\r\n/g, "\n")
-						self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnAnyComplete, self);
-						self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnComplete, self);
-					});
-				}
-				else
-					doErrorFunc();
-			}
-			else
-				doErrorFunc();
-		};
-		var progressFunc = function (e)
-		{
-			if (!e["lengthComputable"])
-				return;
-			self.progress = e.loaded / e.total;
-			self.curTag = tag_;
-			self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnProgress, self);
-		};
-		try
-		{
-			if (this.runtime.isWindowsPhone8)
-				request = new ActiveXObject("Microsoft.XMLHTTP");
-			else
-				request = new XMLHttpRequest();
-			request.onreadystatechange = function()
-			{
-				if (request.readyState === 4)
-				{
-					self.curTag = tag_;
-					if (request.responseText)
-						self.lastData = request.responseText.replace(/\r\n/g, "\n");		// fix windows style line endings
-					else
-						self.lastData = "";
-					if (request.status >= 400)
-					{
-						self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnAnyError, self);
-						self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnError, self);
-					}
-					else
-					{
-						if ((!isNWjs || self.lastData.length) && !(!isNWjs && request.status === 0 && !self.lastData.length))
-						{
-							self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnAnyComplete, self);
-							self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnComplete, self);
-						}
-					}
-				}
-			};
-			if (!this.runtime.isWindowsPhone8)
-			{
-				request.onerror = errorFunc;
-				request.ontimeout = errorFunc;
-				request.onabort = errorFunc;
-				request["onprogress"] = progressFunc;
-			}
-			request.open(method_, url_);
-			if (!this.runtime.isWindowsPhone8)
-			{
-				if (this.timeout >= 0 && typeof request["timeout"] !== "undefined")
-					request["timeout"] = this.timeout;
-			}
-			try {
-				request.responseType = "text";
-			} catch (e) {}
-			if (data_)
-			{
-				if (request["setRequestHeader"] && !next_request_headers.hasOwnProperty("Content-Type"))
-				{
-					request["setRequestHeader"]("Content-Type", "application/x-www-form-urlencoded");
-				}
-			}
-			if (request["setRequestHeader"])
-			{
-				var p;
-				for (p in next_request_headers)
-				{
-					if (next_request_headers.hasOwnProperty(p))
-					{
-						try {
-							request["setRequestHeader"](p, next_request_headers[p]);
-						}
-						catch (e) {}
-					}
-				}
-				next_request_headers = {};
-			}
-			if (next_override_mime && request["overrideMimeType"])
-			{
-				try {
-					request["overrideMimeType"](next_override_mime);
-				}
-				catch (e) {}
-				next_override_mime = "";
-			}
-			if (data_)
-				request.send(data_);
-			else
-				request.send();
-		}
-		catch (e)
-		{
-			errorFunc();
-		}
-	};
-	function Cnds() {};
-	Cnds.prototype.OnComplete = function (tag)
-	{
-		return cr.equals_nocase(tag, this.curTag);
-	};
-	Cnds.prototype.OnAnyComplete = function (tag)
-	{
-		return true;
-	};
-	Cnds.prototype.OnError = function (tag)
-	{
-		return cr.equals_nocase(tag, this.curTag);
-	};
-	Cnds.prototype.OnAnyError = function (tag)
-	{
-		return true;
-	};
-	Cnds.prototype.OnProgress = function (tag)
-	{
-		return cr.equals_nocase(tag, this.curTag);
-	};
-	pluginProto.cnds = new Cnds();
-	function Acts() {};
-	Acts.prototype.Request = function (tag_, url_)
-	{
-		var self = this;
-		if (this.runtime.isWKWebView && !this.runtime.isAbsoluteUrl(url_))
-		{
-			this.runtime.fetchLocalFileViaCordovaAsText(url_,
-			function (str)
-			{
-				self.curTag = tag_;
-				self.lastData = str.replace(/\r\n/g, "\n");		// fix windows style line endings
-				self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnAnyComplete, self);
-				self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnComplete, self);
-			},
-			function (err)
-			{
-				self.curTag = tag_;
-				self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnAnyError, self);
-				self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnError, self);
-			});
-		}
-		else
-		{
-			this.doRequest(tag_, url_, "GET");
-		}
-	};
-	Acts.prototype.RequestFile = function (tag_, file_)
-	{
-		var self = this;
-		if (this.runtime.isWKWebView)
-		{
-			this.runtime.fetchLocalFileViaCordovaAsText(file_,
-			function (str)
-			{
-				self.curTag = tag_;
-				self.lastData = str.replace(/\r\n/g, "\n");		// fix windows style line endings
-				self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnAnyComplete, self);
-				self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnComplete, self);
-			},
-			function (err)
-			{
-				self.curTag = tag_;
-				self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnAnyError, self);
-				self.runtime.trigger(cr.plugins_.AJAX.prototype.cnds.OnError, self);
-			});
-		}
-		else
-		{
-			this.doRequest(tag_, file_, "GET");
-		}
-	};
-	Acts.prototype.Post = function (tag_, url_, data_, method_)
-	{
-		this.doRequest(tag_, url_, method_, data_);
-	};
-	Acts.prototype.SetTimeout = function (t)
-	{
-		this.timeout = t * 1000;
-	};
-	Acts.prototype.SetHeader = function (n, v)
-	{
-		next_request_headers[n] = v;
-	};
-	Acts.prototype.OverrideMIMEType = function (m)
-	{
-		next_override_mime = m;
-	};
-	pluginProto.acts = new Acts();
-	function Exps() {};
-	Exps.prototype.LastData = function (ret)
-	{
-		ret.set_string(this.lastData);
-	};
-	Exps.prototype.Progress = function (ret)
-	{
-		ret.set_float(this.progress);
-	};
-	Exps.prototype.Tag = function (ret)
-	{
-		ret.set_string(this.curTag);
-	};
-	pluginProto.exps = new Exps();
-}());
-;
-;
 cr.plugins_.Arr = function(runtime)
 {
 	this.runtime = runtime;
@@ -21026,6 +20706,783 @@ cr.plugins_.Sprite = function(runtime)
 	};
 	pluginProto.exps = new Exps();
 }());
+/* global cr,log,assert2 */
+/* jshint globalstrict: true */
+/* jshint strict: true */
+;
+;
+cr.plugins_.Spritefont2 = function(runtime)
+{
+	this.runtime = runtime;
+};
+(function ()
+{
+	var pluginProto = cr.plugins_.Spritefont2.prototype;
+	pluginProto.onCreate = function ()
+	{
+	};
+	pluginProto.Type = function(plugin)
+	{
+		this.plugin = plugin;
+		this.runtime = plugin.runtime;
+	};
+	var typeProto = pluginProto.Type.prototype;
+	typeProto.onCreate = function()
+	{
+		if (this.is_family)
+			return;
+		this.texture_img = new Image();
+		this.runtime.waitForImageLoad(this.texture_img, this.texture_file);
+		this.webGL_texture = null;
+	};
+	typeProto.onLostWebGLContext = function ()
+	{
+		if (this.is_family)
+			return;
+		this.webGL_texture = null;
+	};
+	typeProto.onRestoreWebGLContext = function ()
+	{
+		if (this.is_family || !this.instances.length)
+			return;
+		if (!this.webGL_texture)
+		{
+			this.webGL_texture = this.runtime.glwrap.loadTexture(this.texture_img, false, this.runtime.linearSampling, this.texture_pixelformat);
+		}
+		var i, len;
+		for (i = 0, len = this.instances.length; i < len; i++)
+			this.instances[i].webGL_texture = this.webGL_texture;
+	};
+	typeProto.unloadTextures = function ()
+	{
+		if (this.is_family || this.instances.length || !this.webGL_texture)
+			return;
+		this.runtime.glwrap.deleteTexture(this.webGL_texture);
+		this.webGL_texture = null;
+	};
+	typeProto.preloadCanvas2D = function (ctx)
+	{
+		ctx.drawImage(this.texture_img, 0, 0);
+	};
+	pluginProto.Instance = function(type)
+	{
+		this.type = type;
+		this.runtime = type.runtime;
+	};
+	var instanceProto = pluginProto.Instance.prototype;
+	instanceProto.onDestroy = function()
+	{
+		freeAllLines (this.lines);
+		freeAllClip  (this.clipList);
+		freeAllClipUV(this.clipUV);
+		cr.wipe(this.characterWidthList);
+	};
+	instanceProto.onCreate = function()
+	{
+		this.texture_img      = this.type.texture_img;
+		this.characterWidth   = this.properties[0];
+		this.characterHeight  = this.properties[1];
+		this.characterSet     = this.properties[2];
+		this.text             = this.properties[3];
+		this.characterScale   = this.properties[4];
+		this.visible          = (this.properties[5] === 0);	// 0=visible, 1=invisible
+		this.halign           = this.properties[6]/2.0;		// 0=left, 1=center, 2=right
+		this.valign           = this.properties[7]/2.0;		// 0=top, 1=center, 2=bottom
+		this.wrapbyword       = (this.properties[9] === 0);	// 0=word, 1=character
+		this.characterSpacing = this.properties[10];
+		this.lineHeight       = this.properties[11];
+		this.textWidth  = 0;
+		this.textHeight = 0;
+		if (this.recycled)
+		{
+			cr.clearArray(this.lines);
+			cr.wipe(this.clipList);
+			cr.wipe(this.clipUV);
+			cr.wipe(this.characterWidthList);
+		}
+		else
+		{
+			this.lines = [];
+			this.clipList = {};
+			this.clipUV = {};
+			this.characterWidthList = {};
+		}
+		this.text_changed = true;
+		this.lastwrapwidth = this.width;
+		if (this.runtime.glwrap)
+		{
+			if (!this.type.webGL_texture)
+			{
+				this.type.webGL_texture = this.runtime.glwrap.loadTexture(this.type.texture_img, false, this.runtime.linearSampling, this.type.texture_pixelformat);
+			}
+			this.webGL_texture = this.type.webGL_texture;
+		}
+		this.SplitSheet();
+	};
+	instanceProto.saveToJSON = function ()
+	{
+		var save = {
+			"t": this.text,
+			"csc": this.characterScale,
+			"csp": this.characterSpacing,
+			"lh": this.lineHeight,
+			"tw": this.textWidth,
+			"th": this.textHeight,
+			"lrt": this.last_render_tick,
+			"ha": this.halign,
+			"va": this.valign,
+			"cw": {}
+		};
+		for (var ch in this.characterWidthList)
+			save["cw"][ch] = this.characterWidthList[ch];
+		return save;
+	};
+	instanceProto.loadFromJSON = function (o)
+	{
+		this.text = o["t"];
+		this.characterScale = o["csc"];
+		this.characterSpacing = o["csp"];
+		this.lineHeight = o["lh"];
+		this.textWidth = o["tw"];
+		this.textHeight = o["th"];
+		this.last_render_tick = o["lrt"];
+		if (o.hasOwnProperty("ha"))
+			this.halign = o["ha"];
+		if (o.hasOwnProperty("va"))
+			this.valign = o["va"];
+		for(var ch in o["cw"])
+			this.characterWidthList[ch] = o["cw"][ch];
+		this.text_changed = true;
+		this.lastwrapwidth = this.width;
+	};
+	function trimRight(text)
+	{
+		return text.replace(/\s\s*$/, '');
+	}
+	var MAX_CACHE_SIZE = 1000;
+	function alloc(cache,Constructor)
+	{
+		if (cache.length)
+			return cache.pop();
+		else
+			return new Constructor();
+	}
+	function free(cache,data)
+	{
+		if (cache.length < MAX_CACHE_SIZE)
+		{
+			cache.push(data);
+		}
+	}
+	function freeAll(cache,dataList,isArray)
+	{
+		if (isArray) {
+			var i, len;
+			for (i = 0, len = dataList.length; i < len; i++)
+			{
+				free(cache,dataList[i]);
+			}
+			cr.clearArray(dataList);
+		} else {
+			var prop;
+			for(prop in dataList) {
+				if(Object.prototype.hasOwnProperty.call(dataList,prop)) {
+					free(cache,dataList[prop]);
+					delete dataList[prop];
+				}
+			}
+		}
+	}
+	function addLine(inst,lineIndex,cur_line) {
+		var lines = inst.lines;
+		var line;
+		cur_line = trimRight(cur_line);
+		if (lineIndex >= lines.length)
+			lines.push(allocLine());
+		line = lines[lineIndex];
+		line.text = cur_line;
+		line.width = inst.measureWidth(cur_line);
+		inst.textWidth = cr.max(inst.textWidth,line.width);
+	}
+	var linesCache = [];
+	function allocLine()       { return alloc(linesCache,Object); }
+	function freeLine(l)       { free(linesCache,l); }
+	function freeAllLines(arr) { freeAll(linesCache,arr,true); }
+	function addClip(obj,property,x,y,w,h) {
+		if (obj[property] === undefined) {
+			obj[property] = alloc(clipCache,Object);
+		}
+		obj[property].x = x;
+		obj[property].y = y;
+		obj[property].w = w;
+		obj[property].h = h;
+	}
+	var clipCache = [];
+	function allocClip()      { return alloc(clipCache,Object); }
+	function freeAllClip(obj) { freeAll(clipCache,obj,false);}
+	function addClipUV(obj,property,left,top,right,bottom) {
+		if (obj[property] === undefined) {
+			obj[property] = alloc(clipUVCache,cr.rect);
+		}
+		obj[property].left   = left;
+		obj[property].top    = top;
+		obj[property].right  = right;
+		obj[property].bottom = bottom;
+	}
+	var clipUVCache = [];
+	function allocClipUV()      { return alloc(clipUVCache,cr.rect);}
+	function freeAllClipUV(obj) { freeAll(clipUVCache,obj,false);}
+	instanceProto.SplitSheet = function() {
+		var texture      = this.texture_img;
+		var texWidth     = texture.width;
+		var texHeight    = texture.height;
+		var charWidth    = this.characterWidth;
+		var charHeight   = this.characterHeight;
+		var charU        = charWidth /texWidth;
+		var charV        = charHeight/texHeight;
+		var charSet      = this.characterSet ;
+		var cols = Math.floor(texWidth/charWidth);
+		var rows = Math.floor(texHeight/charHeight);
+		for ( var c = 0; c < charSet.length; c++) {
+			if  (c >= cols * rows) break;
+			var x = c%cols;
+			var y = Math.floor(c/cols);
+			var letter = charSet.charAt(c);
+			if (this.runtime.glwrap) {
+				addClipUV(
+					this.clipUV, letter,
+					x * charU ,
+					y * charV ,
+					(x+1) * charU ,
+					(y+1) * charV
+				);
+			} else {
+				addClip(
+					this.clipList, letter,
+					x * charWidth,
+					y * charHeight,
+					charWidth,
+					charHeight
+				);
+			}
+		}
+	};
+	/*
+     *	Word-Wrapping
+     */
+	var wordsCache = [];
+	pluginProto.TokeniseWords = function (text)
+	{
+		cr.clearArray(wordsCache);
+		var cur_word = "";
+		var ch;
+		var i = 0;
+		while (i < text.length)
+		{
+			ch = text.charAt(i);
+			if (ch === "\n")
+			{
+				if (cur_word.length)
+				{
+					wordsCache.push(cur_word);
+					cur_word = "";
+				}
+				wordsCache.push("\n");
+				++i;
+			}
+			else if (ch === " " || ch === "\t" || ch === "-")
+			{
+				do {
+					cur_word += text.charAt(i);
+					i++;
+				}
+				while (i < text.length && (text.charAt(i) === " " || text.charAt(i) === "\t"));
+				wordsCache.push(cur_word);
+				cur_word = "";
+			}
+			else if (i < text.length)
+			{
+				cur_word += ch;
+				i++;
+			}
+		}
+		if (cur_word.length)
+			wordsCache.push(cur_word);
+	};
+	pluginProto.WordWrap = function (inst)
+	{
+		var text = inst.text;
+		var lines = inst.lines;
+		if (!text || !text.length)
+		{
+			freeAllLines(lines);
+			return;
+		}
+		var width = inst.width;
+		if (width <= 2.0)
+		{
+			freeAllLines(lines);
+			return;
+		}
+		var charWidth = inst.characterWidth;
+		var charScale = inst.characterScale;
+		var charSpacing = inst.characterSpacing;
+		if ( (text.length * (charWidth * charScale + charSpacing) - charSpacing) <= width && text.indexOf("\n") === -1)
+		{
+			var all_width = inst.measureWidth(text);
+			if (all_width <= width)
+			{
+				freeAllLines(lines);
+				lines.push(allocLine());
+				lines[0].text = text;
+				lines[0].width = all_width;
+				inst.textWidth  = all_width;
+				inst.textHeight = inst.characterHeight * charScale + inst.lineHeight;
+				return;
+			}
+		}
+		var wrapbyword = inst.wrapbyword;
+		this.WrapText(inst);
+		inst.textHeight = lines.length * (inst.characterHeight * charScale + inst.lineHeight);
+	};
+	pluginProto.WrapText = function (inst)
+	{
+		var wrapbyword = inst.wrapbyword;
+		var text       = inst.text;
+		var lines      = inst.lines;
+		var width      = inst.width;
+		var wordArray;
+		if (wrapbyword) {
+			this.TokeniseWords(text);	// writes to wordsCache
+			wordArray = wordsCache;
+		} else {
+			wordArray = text;
+		}
+		var cur_line = "";
+		var prev_line;
+		var line_width;
+		var i;
+		var lineIndex = 0;
+		var line;
+		var ignore_newline = false;
+		for (i = 0; i < wordArray.length; i++)
+		{
+			if (wordArray[i] === "\n")
+			{
+				if (ignore_newline === true) {
+					ignore_newline = false;
+				} else {
+					addLine(inst,lineIndex,cur_line);
+					lineIndex++;
+				}
+				cur_line = "";
+				continue;
+			}
+			ignore_newline = false;
+			prev_line = cur_line;
+			cur_line += wordArray[i];
+			line_width = inst.measureWidth(trimRight(cur_line));
+			if (line_width > width)
+			{
+				if (prev_line === "") {
+					addLine(inst,lineIndex,cur_line);
+					cur_line = "";
+					ignore_newline = true;
+				} else {
+					addLine(inst,lineIndex,prev_line);
+					cur_line = wordArray[i];
+				}
+				lineIndex++;
+				if (!wrapbyword && cur_line === " ")
+					cur_line = "";
+			}
+		}
+		if (trimRight(cur_line).length)
+		{
+			addLine(inst,lineIndex,cur_line);
+			lineIndex++;
+		}
+		for (i = lineIndex; i < lines.length; i++)
+			freeLine(lines[i]);
+		lines.length = lineIndex;
+	};
+	instanceProto.measureWidth = function(text) {
+		var spacing = this.characterSpacing;
+		var len     = text.length;
+		var width   = 0;
+		for (var i = 0; i < len; i++) {
+			width += this.getCharacterWidth(text.charAt(i)) * this.characterScale + spacing;
+		}
+		width -= (width > 0) ? spacing : 0;
+		return width;
+	};
+	/***/
+	instanceProto.getCharacterWidth = function(character) {
+		var widthList = this.characterWidthList;
+		if (widthList[character] !== undefined) {
+			return widthList[character];
+		} else {
+			return this.characterWidth;
+		}
+	};
+	instanceProto.rebuildText = function() {
+		if (this.text_changed || this.width !== this.lastwrapwidth) {
+			this.textWidth = 0;
+			this.textHeight = 0;
+			this.type.plugin.WordWrap(this);
+			this.text_changed = false;
+			this.lastwrapwidth = this.width;
+		}
+	};
+	var EPSILON = 0.00001;
+	instanceProto.draw = function(ctx, glmode)
+	{
+		var texture = this.texture_img;
+		if (this.text !== "" && texture != null) {
+			this.rebuildText();
+			if (this.height < this.characterHeight*this.characterScale + this.lineHeight) {
+				return;
+			}
+			ctx.globalAlpha = this.opacity;
+			var myx = this.x;
+			var myy = this.y;
+			if (this.runtime.pixel_rounding)
+			{
+				myx = Math.round(myx);
+				myy = Math.round(myy);
+			}
+			var viewLeft = this.layer.viewLeft;
+			var viewTop = this.layer.viewTop;
+			var viewRight = this.layer.viewRight;
+			var viewBottom = this.layer.viewBottom;
+			ctx.save();
+			ctx.translate(myx, myy);
+			ctx.rotate(this.angle);
+			var angle      = this.angle;
+			var ha         = this.halign;
+			var va         = this.valign;
+			var scale      = this.characterScale;
+			var charHeight = this.characterHeight * scale;
+			var lineHeight = this.lineHeight;
+			var charSpace  = this.characterSpacing;
+			var lines = this.lines;
+			var textHeight = this.textHeight;
+			var letterWidth;
+			var halign;
+			var valign = va * cr.max(0,(this.height - textHeight));
+			var offx = -(this.hotspotX * this.width);
+			var offy = -(this.hotspotY * this.height);
+			offy += valign;
+			var drawX ;
+			var drawY = offy;
+			var roundX, roundY;
+			for(var i = 0; i < lines.length; i++) {
+				var line = lines[i].text;
+				var len  = lines[i].width;
+				halign = ha * cr.max(0,this.width - len);
+				drawX = offx + halign;
+				drawY += lineHeight;
+				if (angle === 0 && myy + drawY + charHeight < viewTop)
+				{
+					drawY += charHeight;
+					continue;
+				}
+				for(var j = 0; j < line.length; j++) {
+					var letter = line.charAt(j);
+					letterWidth = this.getCharacterWidth(letter);
+					var clip = this.clipList[letter];
+					if (angle === 0 && myx + drawX + letterWidth * scale + charSpace < viewLeft)
+					{
+						drawX += letterWidth * scale + charSpace;
+						continue;
+					}
+					if ( drawX + letterWidth * scale > this.width + EPSILON ) {
+						break;
+					}
+					if (clip !== undefined) {
+						roundX = drawX;
+						roundY = drawY;
+						if (angle === 0 && scale === 1)
+						{
+							roundX = Math.round(roundX);
+							roundY = Math.round(roundY);
+						}
+						ctx.drawImage( this.texture_img,
+									 clip.x, clip.y, clip.w, clip.h,
+									 roundX,roundY,clip.w*scale,clip.h*scale);
+					}
+					drawX += letterWidth * scale + charSpace;
+					if (angle === 0 && myx + drawX > viewRight)
+						break;
+				}
+				drawY += charHeight;
+				if (angle === 0 && (drawY + charHeight + lineHeight > this.height || myy + drawY > viewBottom))
+				{
+					break;
+				}
+			}
+			ctx.restore();
+		}
+	};
+	var dQuad = new cr.quad();
+	function rotateQuad(quad,cosa,sina) {
+		var x_temp;
+		x_temp   = (quad.tlx * cosa) - (quad.tly * sina);
+		quad.tly = (quad.tly * cosa) + (quad.tlx * sina);
+		quad.tlx = x_temp;
+		x_temp    = (quad.trx * cosa) - (quad.try_ * sina);
+		quad.try_ = (quad.try_ * cosa) + (quad.trx * sina);
+		quad.trx  = x_temp;
+		x_temp   = (quad.blx * cosa) - (quad.bly * sina);
+		quad.bly = (quad.bly * cosa) + (quad.blx * sina);
+		quad.blx = x_temp;
+		x_temp    = (quad.brx * cosa) - (quad.bry * sina);
+		quad.bry = (quad.bry * cosa) + (quad.brx * sina);
+		quad.brx  = x_temp;
+	}
+	instanceProto.drawGL = function(glw)
+	{
+		glw.setTexture(this.webGL_texture);
+		glw.setOpacity(this.opacity);
+		if (!this.text)
+			return;
+		this.rebuildText();
+		if (this.height < this.characterHeight*this.characterScale + this.lineHeight) {
+			return;
+		}
+		this.update_bbox();
+		var q = this.bquad;
+		var ox = 0;
+		var oy = 0;
+		if (this.runtime.pixel_rounding)
+		{
+			ox = Math.round(this.x) - this.x;
+			oy = Math.round(this.y) - this.y;
+		}
+		var viewLeft = this.layer.viewLeft;
+		var viewTop = this.layer.viewTop;
+		var viewRight = this.layer.viewRight;
+		var viewBottom = this.layer.viewBottom;
+		var angle      = this.angle;
+		var ha         = this.halign;
+		var va         = this.valign;
+		var scale      = this.characterScale;
+		var charHeight = this.characterHeight * scale;   // to precalculate in onCreate or on change
+		var lineHeight = this.lineHeight;
+		var charSpace  = this.characterSpacing;
+		var lines = this.lines;
+		var textHeight = this.textHeight;
+		var letterWidth;
+		var cosa,sina;
+		if (angle !== 0)
+		{
+			cosa = Math.cos(angle);
+			sina = Math.sin(angle);
+		}
+		var halign;
+		var valign = va * cr.max(0,(this.height - textHeight));
+		var offx = q.tlx + ox;
+		var offy = q.tly + oy;
+		var drawX ;
+		var drawY = valign;
+		var roundX, roundY;
+		for(var i = 0; i < lines.length; i++) {
+			var line       = lines[i].text;
+			var lineWidth  = lines[i].width;
+			halign = ha * cr.max(0,this.width - lineWidth);
+			drawX = halign;
+			drawY += lineHeight;
+			if (angle === 0 && offy + drawY + charHeight < viewTop)
+			{
+				drawY += charHeight;
+				continue;
+			}
+			for(var j = 0; j < line.length; j++) {
+				var letter = line.charAt(j);
+				letterWidth = this.getCharacterWidth(letter);
+				var clipUV = this.clipUV[letter];
+				if (angle === 0 && offx + drawX + letterWidth * scale + charSpace < viewLeft)
+				{
+					drawX += letterWidth * scale + charSpace;
+					continue;
+				}
+				if (drawX + letterWidth * scale > this.width + EPSILON)
+				{
+					break;
+				}
+				if (clipUV !== undefined) {
+					var clipWidth  = this.characterWidth*scale;
+					var clipHeight = this.characterHeight*scale;
+					roundX = drawX;
+					roundY = drawY;
+					if (angle === 0 && scale === 1)
+					{
+						roundX = Math.round(roundX);
+						roundY = Math.round(roundY);
+					}
+					dQuad.tlx  = roundX;
+					dQuad.tly  = roundY;
+					dQuad.trx  = roundX + clipWidth;
+					dQuad.try_ = roundY ;
+					dQuad.blx  = roundX;
+					dQuad.bly  = roundY + clipHeight;
+					dQuad.brx  = roundX + clipWidth;
+					dQuad.bry  = roundY + clipHeight;
+					if(angle !== 0)
+					{
+						rotateQuad(dQuad,cosa,sina);
+					}
+					dQuad.offset(offx,offy);
+					glw.quadTex(
+						dQuad.tlx, dQuad.tly,
+						dQuad.trx, dQuad.try_,
+						dQuad.brx, dQuad.bry,
+						dQuad.blx, dQuad.bly,
+						clipUV
+					);
+				}
+				drawX += letterWidth * scale + charSpace;
+				if (angle === 0 && offx + drawX > viewRight)
+					break;
+			}
+			drawY += charHeight;
+			if (angle === 0 && (drawY + charHeight + lineHeight > this.height || offy + drawY > viewBottom))
+			{
+				break;
+			}
+		}
+	};
+	function Cnds() {}
+	Cnds.prototype.CompareText = function(text_to_compare, case_sensitive)
+	{
+		if (case_sensitive)
+			return this.text == text_to_compare;
+		else
+			return cr.equals_nocase(this.text, text_to_compare);
+	};
+	pluginProto.cnds = new Cnds();
+	function Acts() {}
+	Acts.prototype.SetText = function(param)
+	{
+		if (cr.is_number(param) && param < 1e9)
+			param = Math.round(param * 1e10) / 1e10;	// round to nearest ten billionth - hides floating point errors
+		var text_to_set = param.toString();
+		if (this.text !== text_to_set)
+		{
+			this.text = text_to_set;
+			this.text_changed = true;
+			this.runtime.redraw = true;
+		}
+	};
+	Acts.prototype.AppendText = function(param)
+	{
+		if (cr.is_number(param))
+			param = Math.round(param * 1e10) / 1e10;	// round to nearest ten billionth - hides floating point errors
+		var text_to_append = param.toString();
+		if (text_to_append)	// not empty
+		{
+			this.text += text_to_append;
+			this.text_changed = true;
+			this.runtime.redraw = true;
+		}
+	};
+	Acts.prototype.SetScale = function(param)
+	{
+		if (param !== this.characterScale) {
+			this.characterScale = param;
+			this.text_changed = true;
+			this.runtime.redraw = true;
+		}
+	};
+	Acts.prototype.SetCharacterSpacing = function(param)
+	{
+		if (param !== this.CharacterSpacing) {
+			this.characterSpacing = param;
+			this.text_changed = true;
+			this.runtime.redraw = true;
+		}
+	};
+	Acts.prototype.SetLineHeight = function(param)
+	{
+		if (param !== this.lineHeight) {
+			this.lineHeight = param;
+			this.text_changed = true;
+			this.runtime.redraw = true;
+		}
+	};
+	instanceProto.SetCharWidth = function(character,width) {
+		var w = parseInt(width,10);
+		if (this.characterWidthList[character] !== w) {
+			this.characterWidthList[character] = w;
+			this.text_changed = true;
+			this.runtime.redraw = true;
+		}
+	};
+	Acts.prototype.SetCharacterWidth = function(characterSet,width)
+	{
+		if (characterSet !== "") {
+			for(var c = 0; c < characterSet.length; c++) {
+				this.SetCharWidth(characterSet.charAt(c),width);
+			}
+		}
+	};
+	Acts.prototype.SetEffect = function (effect)
+	{
+		this.blend_mode = effect;
+		this.compositeOp = cr.effectToCompositeOp(effect);
+		cr.setGLBlend(this, effect, this.runtime.gl);
+		this.runtime.redraw = true;
+	};
+	Acts.prototype.SetHAlign = function (a)
+	{
+		this.halign = a / 2.0;
+		this.text_changed = true;
+		this.runtime.redraw = true;
+	};
+	Acts.prototype.SetVAlign = function (a)
+	{
+		this.valign = a / 2.0;
+		this.text_changed = true;
+		this.runtime.redraw = true;
+	};
+	pluginProto.acts = new Acts();
+	function Exps() {}
+	Exps.prototype.CharacterWidth = function(ret,character)
+	{
+		ret.set_int(this.getCharacterWidth(character));
+	};
+	Exps.prototype.CharacterHeight = function(ret)
+	{
+		ret.set_int(this.characterHeight);
+	};
+	Exps.prototype.CharacterScale = function(ret)
+	{
+		ret.set_float(this.characterScale);
+	};
+	Exps.prototype.CharacterSpacing = function(ret)
+	{
+		ret.set_int(this.characterSpacing);
+	};
+	Exps.prototype.LineHeight = function(ret)
+	{
+		ret.set_int(this.lineHeight);
+	};
+	Exps.prototype.Text = function(ret)
+	{
+		ret.set_string(this.text);
+	};
+	Exps.prototype.TextWidth = function (ret)
+	{
+		this.rebuildText();
+		ret.set_float(this.textWidth);
+	};
+	Exps.prototype.TextHeight = function (ret)
+	{
+		this.rebuildText();
+		ret.set_float(this.textHeight);
+	};
+	pluginProto.exps = new Exps();
+}());
 ;
 ;
 cr.plugins_.Text = function(runtime)
@@ -21657,318 +22114,6 @@ cr.plugins_.Text = function(runtime)
 	Exps.prototype.TextHeight = function (ret)
 	{
 		ret.set_int(this.lines.length * (this.pxHeight + this.line_height_offset) - this.line_height_offset);
-	};
-	pluginProto.exps = new Exps();
-}());
-;
-;
-cr.plugins_.TextBox = function(runtime)
-{
-	this.runtime = runtime;
-};
-(function ()
-{
-	var pluginProto = cr.plugins_.TextBox.prototype;
-	pluginProto.Type = function(plugin)
-	{
-		this.plugin = plugin;
-		this.runtime = plugin.runtime;
-	};
-	var typeProto = pluginProto.Type.prototype;
-	typeProto.onCreate = function()
-	{
-	};
-	pluginProto.Instance = function(type)
-	{
-		this.type = type;
-		this.runtime = type.runtime;
-	};
-	var instanceProto = pluginProto.Instance.prototype;
-	var elemTypes = ["text", "password", "email", "number", "tel", "url"];
-	if (navigator.userAgent.indexOf("MSIE 9") > -1)
-	{
-		elemTypes[2] = "text";
-		elemTypes[3] = "text";
-		elemTypes[4] = "text";
-		elemTypes[5] = "text";
-	}
-	instanceProto.onCreate = function()
-	{
-		if (this.runtime.isDomFree)
-		{
-			cr.logexport("[Construct 2] Textbox plugin not supported on this platform - the object will not be created");
-			return;
-		}
-		if (this.properties[7] === 6)	// textarea
-		{
-			this.elem = document.createElement("textarea");
-			jQuery(this.elem).css("resize", "none");
-		}
-		else
-		{
-			this.elem = document.createElement("input");
-			this.elem.type = elemTypes[this.properties[7]];
-		}
-		this.elem.id = this.properties[9];
-		jQuery(this.elem).appendTo(this.runtime.canvasdiv ? this.runtime.canvasdiv : "body");
-		this.elem["autocomplete"] = "off";
-		this.elem.value = this.properties[0];
-		this.elem["placeholder"] = this.properties[1];
-		this.elem.title = this.properties[2];
-		this.elem.disabled = (this.properties[4] === 0);
-		this.elem["readOnly"] = (this.properties[5] === 1);
-		this.elem["spellcheck"] = (this.properties[6] === 1);
-		this.autoFontSize = (this.properties[8] !== 0);
-		this.element_hidden = false;
-		if (this.properties[3] === 0)
-		{
-			jQuery(this.elem).hide();
-			this.visible = false;
-			this.element_hidden = true;
-		}
-		var onchangetrigger = (function (self) {
-			return function() {
-				self.runtime.trigger(cr.plugins_.TextBox.prototype.cnds.OnTextChanged, self);
-			};
-		})(this);
-		this.elem["oninput"] = onchangetrigger;
-		if (navigator.userAgent.indexOf("MSIE") !== -1)
-			this.elem["oncut"] = onchangetrigger;
-		this.elem.onclick = (function (self) {
-			return function(e) {
-				e.stopPropagation();
-				self.runtime.isInUserInputEvent = true;
-				self.runtime.trigger(cr.plugins_.TextBox.prototype.cnds.OnClicked, self);
-				self.runtime.isInUserInputEvent = false;
-			};
-		})(this);
-		this.elem.ondblclick = (function (self) {
-			return function(e) {
-				e.stopPropagation();
-				self.runtime.isInUserInputEvent = true;
-				self.runtime.trigger(cr.plugins_.TextBox.prototype.cnds.OnDoubleClicked, self);
-				self.runtime.isInUserInputEvent = false;
-			};
-		})(this);
-		this.elem.addEventListener("touchstart", function (e) {
-			e.stopPropagation();
-		}, false);
-		this.elem.addEventListener("touchmove", function (e) {
-			e.stopPropagation();
-		}, false);
-		this.elem.addEventListener("touchend", function (e) {
-			e.stopPropagation();
-		}, false);
-		jQuery(this.elem).mousedown(function (e) {
-			e.stopPropagation();
-		});
-		jQuery(this.elem).mouseup(function (e) {
-			e.stopPropagation();
-		});
-		jQuery(this.elem).keydown(function (e) {
-			if (e.which !== 13 && e.which != 27)	// allow enter and escape
-				e.stopPropagation();
-		});
-		jQuery(this.elem).keyup(function (e) {
-			if (e.which !== 13 && e.which != 27)	// allow enter and escape
-				e.stopPropagation();
-		});
-		this.lastLeft = 0;
-		this.lastTop = 0;
-		this.lastRight = 0;
-		this.lastBottom = 0;
-		this.lastWinWidth = 0;
-		this.lastWinHeight = 0;
-		this.updatePosition(true);
-		this.runtime.tickMe(this);
-	};
-	instanceProto.saveToJSON = function ()
-	{
-		return {
-			"text": this.elem.value,
-			"placeholder": this.elem.placeholder,
-			"tooltip": this.elem.title,
-			"disabled": !!this.elem.disabled,
-			"readonly": !!this.elem.readOnly,
-			"spellcheck": !!this.elem["spellcheck"]
-		};
-	};
-	instanceProto.loadFromJSON = function (o)
-	{
-		this.elem.value = o["text"];
-		this.elem.placeholder = o["placeholder"];
-		this.elem.title = o["tooltip"];
-		this.elem.disabled = o["disabled"];
-		this.elem.readOnly = o["readonly"];
-		this.elem["spellcheck"] = o["spellcheck"];
-	};
-	instanceProto.onDestroy = function ()
-	{
-		if (this.runtime.isDomFree)
-				return;
-		jQuery(this.elem).remove();
-		this.elem = null;
-	};
-	instanceProto.tick = function ()
-	{
-		this.updatePosition();
-	};
-	instanceProto.updatePosition = function (first)
-	{
-		if (this.runtime.isDomFree)
-			return;
-		var left = this.layer.layerToCanvas(this.x, this.y, true);
-		var top = this.layer.layerToCanvas(this.x, this.y, false);
-		var right = this.layer.layerToCanvas(this.x + this.width, this.y + this.height, true);
-		var bottom = this.layer.layerToCanvas(this.x + this.width, this.y + this.height, false);
-		var rightEdge = this.runtime.width / this.runtime.devicePixelRatio;
-		var bottomEdge = this.runtime.height / this.runtime.devicePixelRatio;
-		if (!this.visible || !this.layer.visible || right <= 0 || bottom <= 0 || left >= rightEdge || top >= bottomEdge)
-		{
-			if (!this.element_hidden)
-				jQuery(this.elem).hide();
-			this.element_hidden = true;
-			return;
-		}
-		if (left < 1)
-			left = 1;
-		if (top < 1)
-			top = 1;
-		if (right >= rightEdge)
-			right = rightEdge - 1;
-		if (bottom >= bottomEdge)
-			bottom = bottomEdge - 1;
-		var curWinWidth = window.innerWidth;
-		var curWinHeight = window.innerHeight;
-		if (!first && this.lastLeft === left && this.lastTop === top && this.lastRight === right && this.lastBottom === bottom && this.lastWinWidth === curWinWidth && this.lastWinHeight === curWinHeight)
-		{
-			if (this.element_hidden)
-			{
-				jQuery(this.elem).show();
-				this.element_hidden = false;
-			}
-			return;
-		}
-		this.lastLeft = left;
-		this.lastTop = top;
-		this.lastRight = right;
-		this.lastBottom = bottom;
-		this.lastWinWidth = curWinWidth;
-		this.lastWinHeight = curWinHeight;
-		if (this.element_hidden)
-		{
-			jQuery(this.elem).show();
-			this.element_hidden = false;
-		}
-		var offx = Math.round(left) + jQuery(this.runtime.canvas).offset().left;
-		var offy = Math.round(top) + jQuery(this.runtime.canvas).offset().top;
-		jQuery(this.elem).css("position", "absolute");
-		jQuery(this.elem).offset({left: offx, top: offy});
-		jQuery(this.elem).width(Math.round(right - left));
-		jQuery(this.elem).height(Math.round(bottom - top));
-		if (this.autoFontSize)
-			jQuery(this.elem).css("font-size", ((this.layer.getScale(true) / this.runtime.devicePixelRatio) - 0.2) + "em");
-	};
-	instanceProto.draw = function(ctx)
-	{
-	};
-	instanceProto.drawGL = function(glw)
-	{
-	};
-	function Cnds() {};
-	Cnds.prototype.CompareText = function (text, case_)
-	{
-		if (this.runtime.isDomFree)
-			return false;
-		if (case_ === 0)	// insensitive
-			return cr.equals_nocase(this.elem.value, text);
-		else
-			return this.elem.value === text;
-	};
-	Cnds.prototype.OnTextChanged = function ()
-	{
-		return true;
-	};
-	Cnds.prototype.OnClicked = function ()
-	{
-		return true;
-	};
-	Cnds.prototype.OnDoubleClicked = function ()
-	{
-		return true;
-	};
-	pluginProto.cnds = new Cnds();
-	function Acts() {};
-	Acts.prototype.SetText = function (text)
-	{
-		if (this.runtime.isDomFree)
-			return;
-		this.elem.value = text;
-	};
-	Acts.prototype.SetPlaceholder = function (text)
-	{
-		if (this.runtime.isDomFree)
-			return;
-		this.elem.placeholder = text;
-	};
-	Acts.prototype.SetTooltip = function (text)
-	{
-		if (this.runtime.isDomFree)
-			return;
-		this.elem.title = text;
-	};
-	Acts.prototype.SetVisible = function (vis)
-	{
-		if (this.runtime.isDomFree)
-			return;
-		this.visible = (vis !== 0);
-	};
-	Acts.prototype.SetEnabled = function (en)
-	{
-		if (this.runtime.isDomFree)
-			return;
-		this.elem.disabled = (en === 0);
-	};
-	Acts.prototype.SetReadOnly = function (ro)
-	{
-		if (this.runtime.isDomFree)
-			return;
-		this.elem.readOnly = (ro === 0);
-	};
-	Acts.prototype.SetFocus = function ()
-	{
-		if (this.runtime.isDomFree)
-			return;
-		this.elem.focus();
-	};
-	Acts.prototype.SetBlur = function ()
-	{
-		if (this.runtime.isDomFree)
-			return;
-		this.elem.blur();
-	};
-	Acts.prototype.SetCSSStyle = function (p, v)
-	{
-		if (this.runtime.isDomFree)
-			return;
-		jQuery(this.elem).css(p, v);
-	};
-	Acts.prototype.ScrollToBottom = function ()
-	{
-		if (this.runtime.isDomFree)
-			return;
-		this.elem.scrollTop = this.elem.scrollHeight;
-	};
-	pluginProto.acts = new Acts();
-	function Exps() {};
-	Exps.prototype.Text = function (ret)
-	{
-		if (this.runtime.isDomFree)
-		{
-			ret.set_string("");
-			return;
-		}
-		ret.set_string(this.elem.value);
 	};
 	pluginProto.exps = new Exps();
 }());
@@ -23142,6 +23287,864 @@ cr.plugins_.Touch = function(runtime)
 }());
 ;
 ;
+cr.plugins_.WebStorage = function(runtime)
+{
+	this.runtime = runtime;
+};
+(function()
+{
+	var pluginProto = cr.plugins_.WebStorage.prototype;
+	pluginProto.Type = function(plugin)
+	{
+		this.plugin = plugin;
+		this.runtime = plugin.runtime;
+	};
+	var typeProto = pluginProto.Type.prototype;
+	typeProto.onCreate = function()
+	{
+	};
+	pluginProto.Instance = function(type)
+	{
+		this.type = type;
+		this.runtime = type.runtime;
+	};
+	var instanceProto = pluginProto.Instance.prototype;
+	var prefix = "";
+	var is_arcade = (typeof window["is_scirra_arcade"] !== "undefined");
+	if (is_arcade)
+		prefix = "arcade" + window["scirra_arcade_id"];
+	var isSupported = false;
+	try {
+		localStorage.getItem("test");
+		isSupported = true;
+	}
+	catch (e)
+	{
+		isSupported = false;
+	}
+	instanceProto.onCreate = function()
+	{
+		if (!isSupported)
+		{
+			cr.logexport("[Construct 2] Webstorage plugin: local storage is not supported on this platform.");
+		}
+	};
+	function Cnds() {};
+	Cnds.prototype.LocalStorageEnabled = function()
+	{
+		return isSupported;
+	};
+	Cnds.prototype.SessionStorageEnabled = function()
+	{
+		return isSupported;
+	};
+	Cnds.prototype.LocalStorageExists = function(key)
+	{
+		if (!isSupported)
+			return false;
+		return localStorage.getItem(prefix + key) != null;
+	};
+	Cnds.prototype.SessionStorageExists = function(key)
+	{
+		if (!isSupported)
+			return false;
+		return sessionStorage.getItem(prefix + key) != null;
+	};
+	Cnds.prototype.OnQuotaExceeded = function ()
+	{
+		return true;
+	};
+	Cnds.prototype.CompareKeyText = function (key, text_to_compare, case_sensitive)
+	{
+		if (!isSupported)
+			return false;
+		var value = localStorage.getItem(prefix + key) || "";
+		if (case_sensitive)
+			return value == text_to_compare;
+		else
+			return cr.equals_nocase(value, text_to_compare);
+	};
+	Cnds.prototype.CompareKeyNumber = function (key, cmp, x)
+	{
+		if (!isSupported)
+			return false;
+		var value = localStorage.getItem(prefix + key) || "";
+		return cr.do_cmp(parseFloat(value), cmp, x);
+	};
+	pluginProto.cnds = new Cnds();
+	function Acts() {};
+	Acts.prototype.StoreLocal = function(key, data)
+	{
+		if (!isSupported)
+			return;
+		try {
+			localStorage.setItem(prefix + key, data);
+		}
+		catch (e)
+		{
+			this.runtime.trigger(cr.plugins_.WebStorage.prototype.cnds.OnQuotaExceeded, this);
+		}
+	};
+	Acts.prototype.StoreSession = function(key,data)
+	{
+		if (!isSupported)
+			return;
+		try {
+			sessionStorage.setItem(prefix + key, data);
+		}
+		catch (e)
+		{
+			this.runtime.trigger(cr.plugins_.WebStorage.prototype.cnds.OnQuotaExceeded, this);
+		}
+	};
+	Acts.prototype.RemoveLocal = function(key)
+	{
+		if (!isSupported)
+			return;
+		localStorage.removeItem(prefix + key);
+	};
+	Acts.prototype.RemoveSession = function(key)
+	{
+		if (!isSupported)
+			return;
+		sessionStorage.removeItem(prefix + key);
+	};
+	Acts.prototype.ClearLocal = function()
+	{
+		if (!isSupported)
+			return;
+		if (!is_arcade)
+			localStorage.clear();
+	};
+	Acts.prototype.ClearSession = function()
+	{
+		if (!isSupported)
+			return;
+		if (!is_arcade)
+			sessionStorage.clear();
+	};
+	Acts.prototype.JSONLoad = function (json_, mode_)
+	{
+		if (!isSupported)
+			return;
+		var d;
+		try {
+			d = JSON.parse(json_);
+		}
+		catch(e) { return; }
+		if (!d["c2dictionary"])			// presumably not a c2dictionary object
+			return;
+		var o = d["data"];
+		if (mode_ === 0 && !is_arcade)	// 'set' mode: must clear webstorage first
+			localStorage.clear();
+		var p;
+		for (p in o)
+		{
+			if (o.hasOwnProperty(p))
+			{
+				try {
+					localStorage.setItem(prefix + p, o[p]);
+				}
+				catch (e)
+				{
+					this.runtime.trigger(cr.plugins_.WebStorage.prototype.cnds.OnQuotaExceeded, this);
+					return;
+				}
+			}
+		}
+	};
+	pluginProto.acts = new Acts();
+	function Exps() {};
+	Exps.prototype.LocalValue = function(ret,key)
+	{
+		if (!isSupported)
+		{
+			ret.set_string("");
+			return;
+		}
+		ret.set_string(localStorage.getItem(prefix + key) || "");
+	};
+	Exps.prototype.SessionValue = function(ret,key)
+	{
+		if (!isSupported)
+		{
+			ret.set_string("");
+			return;
+		}
+		ret.set_string(sessionStorage.getItem(prefix + key) || "");
+	};
+	Exps.prototype.LocalCount = function(ret)
+	{
+		if (!isSupported)
+		{
+			ret.set_int(0);
+			return;
+		}
+		ret.set_int(is_arcade ? 0 : localStorage.length);
+	};
+	Exps.prototype.SessionCount = function(ret)
+	{
+		if (!isSupported)
+		{
+			ret.set_int(0);
+			return;
+		}
+		ret.set_int(is_arcade ? 0 : sessionStorage.length);
+	};
+	Exps.prototype.LocalAt = function(ret,n)
+	{
+		if (is_arcade || !isSupported)
+			ret.set_string("");
+		else
+			ret.set_string(localStorage.getItem(localStorage.key(n)) || "");
+	};
+	Exps.prototype.SessionAt = function(ret,n)
+	{
+		if (is_arcade || !isSupported)
+			ret.set_string("");
+		else
+			ret.set_string(sessionStorage.getItem(sessionStorage.key(n)) || "");
+	};
+	Exps.prototype.LocalKeyAt = function(ret,n)
+	{
+		if (is_arcade || !isSupported)
+			ret.set_string("");
+		else
+			ret.set_string(localStorage.key(n) || "");
+	};
+	Exps.prototype.SessionKeyAt = function(ret,n)
+	{
+		if (is_arcade || !isSupported)
+			ret.set_string("");
+		else
+			ret.set_string(sessionStorage.key(n) || "");
+	};
+	Exps.prototype.AsJSON = function (ret)
+	{
+		if (!isSupported)
+		{
+			ret.set_string("");
+			return;
+		}
+		var o = {}, i, len, k;
+		for (i = 0, len = localStorage.length; i < len; i++)
+		{
+			k = localStorage.key(i);
+			if (is_arcade)
+			{
+				if (k.substr(0, prefix.length) === prefix)
+				{
+					o[k.substr(prefix.length)] = localStorage.getItem(k);
+				}
+			}
+			else
+				o[k] = localStorage.getItem(k);
+		}
+		ret.set_string(JSON.stringify({
+			"c2dictionary": true,
+			"data": o
+		}));
+	};
+	pluginProto.exps = new Exps();
+}());
+;
+;
+cr.behaviors.DragnDrop = function(runtime)
+{
+	this.runtime = runtime;
+	var self = this;
+	if (!this.runtime.isDomFree)
+	{
+		jQuery(document).mousemove(
+			function(info) {
+				self.onMouseMove(info);
+			}
+		);
+		jQuery(document).mousedown(
+			function(info) {
+				self.onMouseDown(info);
+			}
+		);
+		jQuery(document).mouseup(
+			function(info) {
+				self.onMouseUp(info);
+			}
+		);
+	}
+	var elem = (this.runtime.fullscreen_mode > 0) ? document : this.runtime.canvas;
+	if (this.runtime.isDirectCanvas)
+		elem = window["Canvas"];
+	else if (this.runtime.isCocoonJs)
+		elem = window;
+	if (typeof PointerEvent !== "undefined")
+	{
+		elem.addEventListener("pointerdown",
+			function(info) {
+				self.onPointerStart(info);
+			},
+			false
+		);
+		elem.addEventListener("pointermove",
+			function(info) {
+				self.onPointerMove(info);
+			},
+			false
+		);
+		elem.addEventListener("pointerup",
+			function(info) {
+				self.onPointerEnd(info);
+			},
+			false
+		);
+		elem.addEventListener("pointercancel",
+			function(info) {
+				self.onPointerEnd(info);
+			},
+			false
+		);
+	}
+	else if (window.navigator["msPointerEnabled"])
+	{
+		elem.addEventListener("MSPointerDown",
+			function(info) {
+				self.onPointerStart(info);
+			},
+			false
+		);
+		elem.addEventListener("MSPointerMove",
+			function(info) {
+				self.onPointerMove(info);
+			},
+			false
+		);
+		elem.addEventListener("MSPointerUp",
+			function(info) {
+				self.onPointerEnd(info);
+			},
+			false
+		);
+		elem.addEventListener("MSPointerCancel",
+			function(info) {
+				self.onPointerEnd(info);
+			},
+			false
+		);
+	}
+	else
+	{
+		elem.addEventListener("touchstart",
+			function(info) {
+				self.onTouchStart(info);
+			},
+			false
+		);
+		elem.addEventListener("touchmove",
+			function(info) {
+				self.onTouchMove(info);
+			},
+			false
+		);
+		elem.addEventListener("touchend",
+			function(info) {
+				self.onTouchEnd(info);
+			},
+			false
+		);
+		elem.addEventListener("touchcancel",
+			function(info) {
+				self.onTouchEnd(info);
+			},
+			false
+		);
+	}
+};
+(function ()
+{
+	var behaviorProto = cr.behaviors.DragnDrop.prototype;
+	var dummyoffset = {left: 0, top: 0};
+	function GetDragDropBehavior(inst)
+	{
+		var i, len;
+		for (i = 0, len = inst.behavior_insts.length; i < len; i++)
+		{
+			if (inst.behavior_insts[i] instanceof behaviorProto.Instance)
+				return inst.behavior_insts[i];
+		}
+		return null;
+	};
+	behaviorProto.onMouseDown = function (info)
+	{
+		if (info.which !== 1)
+			return;		// not left mouse button
+		this.onInputDown("leftmouse", info.pageX, info.pageY);
+	};
+	behaviorProto.onMouseMove = function (info)
+	{
+		if (info.which !== 1)
+			return;		// not left mouse button
+		this.onInputMove("leftmouse", info.pageX, info.pageY);
+	};
+	behaviorProto.onMouseUp = function (info)
+	{
+		if (info.which !== 1)
+			return;		// not left mouse button
+		this.onInputUp("leftmouse");
+	};
+	behaviorProto.onTouchStart = function (info)
+	{
+		if (info.preventDefault && cr.isCanvasInputEvent(info))
+			info.preventDefault();
+		var i, len, t, id;
+		for (i = 0, len = info.changedTouches.length; i < len; i++)
+		{
+			t = info.changedTouches[i];
+			id = t.identifier;
+			this.onInputDown(id ? id.toString() : "<none>", t.pageX, t.pageY);
+		}
+	};
+	behaviorProto.onTouchMove = function (info)
+	{
+		if (info.preventDefault)
+			info.preventDefault();
+		var i, len, t, id;
+		for (i = 0, len = info.changedTouches.length; i < len; i++)
+		{
+			t = info.changedTouches[i];
+			id = t.identifier;
+			this.onInputMove(id ? id.toString() : "<none>", t.pageX, t.pageY);
+		}
+	};
+	behaviorProto.onTouchEnd = function (info)
+	{
+		if (info.preventDefault && cr.isCanvasInputEvent(info))
+			info.preventDefault();
+		var i, len, t, id;
+		for (i = 0, len = info.changedTouches.length; i < len; i++)
+		{
+			t = info.changedTouches[i];
+			id = t.identifier;
+			this.onInputUp(id ? id.toString() : "<none>");
+		}
+	};
+	behaviorProto.onPointerStart = function (info)
+	{
+		if (info["pointerType"] === info["MSPOINTER_TYPE_MOUSE"] || info["pointerType"] === "mouse")
+			return;
+		if (info.preventDefault && cr.isCanvasInputEvent(info))
+			info.preventDefault();
+		this.onInputDown(info["pointerId"].toString(), info.pageX, info.pageY);
+	};
+	behaviorProto.onPointerMove = function (info)
+	{
+		if (info["pointerType"] === info["MSPOINTER_TYPE_MOUSE"] || info["pointerType"] === "mouse")
+			return;
+		if (info.preventDefault)
+			info.preventDefault();
+		this.onInputMove(info["pointerId"].toString(), info.pageX, info.pageY);
+	};
+	behaviorProto.onPointerEnd = function (info)
+	{
+		if (info["pointerType"] === info["MSPOINTER_TYPE_MOUSE"] || info["pointerType"] === "mouse")
+			return;
+		if (info.preventDefault && cr.isCanvasInputEvent(info))
+			info.preventDefault();
+		this.onInputUp(info["pointerId"].toString());
+	};
+	behaviorProto.onInputDown = function (src, pageX, pageY)
+	{
+		var offset = this.runtime.isDomFree ? dummyoffset : jQuery(this.runtime.canvas).offset();
+		var x = pageX - offset.left;
+		var y = pageY - offset.top;
+		var lx, ly, topx, topy;
+		var arr = this.my_instances.valuesRef();
+		var i, len, b, inst, topmost = null;
+		for (i = 0, len = arr.length; i < len; i++)
+		{
+			inst = arr[i];
+			b = GetDragDropBehavior(inst);
+			if (!b.enabled || b.dragging)
+				continue;		// don't consider disabled or already-dragging instances
+			lx = inst.layer.canvasToLayer(x, y, true);
+			ly = inst.layer.canvasToLayer(x, y, false);
+			inst.update_bbox();
+			if (!inst.contains_pt(lx, ly))
+				continue;		// don't consider instances not over this point
+			if (!topmost)
+			{
+				topmost = inst;
+				topx = lx;
+				topy = ly;
+				continue;
+			}
+			if (inst.layer.index > topmost.layer.index)
+			{
+				topmost = inst;
+				topx = lx;
+				topy = ly;
+				continue;
+			}
+			if (inst.layer.index === topmost.layer.index && inst.get_zindex() > topmost.get_zindex())
+			{
+				topmost = inst;
+				topx = lx;
+				topy = ly;
+				continue;
+			}
+		}
+		if (topmost)
+			GetDragDropBehavior(topmost).onDown(src, topx, topy);
+	};
+	behaviorProto.onInputMove = function (src, pageX, pageY)
+	{
+		var offset = this.runtime.isDomFree ? dummyoffset : jQuery(this.runtime.canvas).offset();
+		var x = pageX - offset.left;
+		var y = pageY - offset.top;
+		var lx, ly;
+		var arr = this.my_instances.valuesRef();
+		var i, len, b, inst;
+		for (i = 0, len = arr.length; i < len; i++)
+		{
+			inst = arr[i];
+			b = GetDragDropBehavior(inst);
+			if (!b.enabled || !b.dragging || (b.dragging && b.dragsource !== src))
+				continue;		// don't consider disabled, not-dragging, or dragging by other sources
+			lx = inst.layer.canvasToLayer(x, y, true);
+			ly = inst.layer.canvasToLayer(x, y, false);
+			b.onMove(lx, ly);
+		}
+	};
+	behaviorProto.onInputUp = function (src)
+	{
+		var arr = this.my_instances.valuesRef();
+		var i, len, b, inst;
+		for (i = 0, len = arr.length; i < len; i++)
+		{
+			inst = arr[i];
+			b = GetDragDropBehavior(inst);
+			if (b.dragging && b.dragsource === src)
+				b.onUp();
+		}
+	};
+	behaviorProto.Type = function(behavior, objtype)
+	{
+		this.behavior = behavior;
+		this.objtype = objtype;
+		this.runtime = behavior.runtime;
+	};
+	var behtypeProto = behaviorProto.Type.prototype;
+	behtypeProto.onCreate = function()
+	{
+	};
+	behaviorProto.Instance = function(type, inst)
+	{
+		this.type = type;
+		this.behavior = type.behavior;
+		this.inst = inst;				// associated object instance to modify
+		this.runtime = type.runtime;
+	};
+	var behinstProto = behaviorProto.Instance.prototype;
+	behinstProto.onCreate = function()
+	{
+		this.dragging = false;
+		this.dx = 0;
+		this.dy = 0;
+		this.dragsource = "<none>";
+		this.axes = this.properties[0];
+		this.enabled = (this.properties[1] !== 0);
+	};
+	behinstProto.saveToJSON = function ()
+	{
+		return { "enabled": this.enabled };
+	};
+	behinstProto.loadFromJSON = function (o)
+	{
+		this.enabled = o["enabled"];
+		this.dragging = false;
+	};
+	behinstProto.onDown = function(src, x, y)
+	{
+		this.dx = x - this.inst.x;
+		this.dy = y - this.inst.y;
+		this.dragging = true;
+		this.dragsource = src;
+		this.runtime.isInUserInputEvent = true;
+		this.runtime.trigger(cr.behaviors.DragnDrop.prototype.cnds.OnDragStart, this.inst);
+		this.runtime.isInUserInputEvent = false;
+	};
+	behinstProto.onMove = function(x, y)
+	{
+		var newx = x - this.dx;
+		var newy = y - this.dy;
+		if (this.axes === 0)		// both
+		{
+			if (this.inst.x !== newx || this.inst.y !== newy)
+			{
+				this.inst.x = newx;
+				this.inst.y = newy;
+				this.inst.set_bbox_changed();
+			}
+		}
+		else if (this.axes === 1)	// horizontal
+		{
+			if (this.inst.x !== newx)
+			{
+				this.inst.x = newx;
+				this.inst.set_bbox_changed();
+			}
+		}
+		else if (this.axes === 2)	// vertical
+		{
+			if (this.inst.y !== newy)
+			{
+				this.inst.y = newy;
+				this.inst.set_bbox_changed();
+			}
+		}
+	};
+	behinstProto.onUp = function()
+	{
+		this.dragging = false;
+		this.runtime.isInUserInputEvent = true;
+		this.runtime.trigger(cr.behaviors.DragnDrop.prototype.cnds.OnDrop, this.inst);
+		this.runtime.isInUserInputEvent = false;
+	};
+	behinstProto.tick = function ()
+	{
+	};
+	function Cnds() {};
+	Cnds.prototype.IsDragging = function ()
+	{
+		return this.dragging;
+	};
+	Cnds.prototype.OnDragStart = function ()
+	{
+		return true;
+	};
+	Cnds.prototype.OnDrop = function ()
+	{
+		return true;
+	};
+	Cnds.prototype.IsEnabled = function ()
+	{
+		return !!this.enabled;
+	};
+	behaviorProto.cnds = new Cnds();
+	function Acts() {};
+	Acts.prototype.SetEnabled = function (s)
+	{
+		this.enabled = (s !== 0);
+		if (!this.enabled)
+			this.dragging = false;
+	};
+	Acts.prototype.Drop = function ()
+	{
+		if (this.dragging)
+			this.onUp();
+	};
+	behaviorProto.acts = new Acts();
+	function Exps() {};
+	behaviorProto.exps = new Exps();
+}());
+;
+;
+cr.behaviors.Fade = function(runtime)
+{
+	this.runtime = runtime;
+};
+(function ()
+{
+	var behaviorProto = cr.behaviors.Fade.prototype;
+	behaviorProto.Type = function(behavior, objtype)
+	{
+		this.behavior = behavior;
+		this.objtype = objtype;
+		this.runtime = behavior.runtime;
+	};
+	var behtypeProto = behaviorProto.Type.prototype;
+	behtypeProto.onCreate = function()
+	{
+	};
+	behaviorProto.Instance = function(type, inst)
+	{
+		this.type = type;
+		this.behavior = type.behavior;
+		this.inst = inst;				// associated object instance to modify
+		this.runtime = type.runtime;
+	};
+	var behinstProto = behaviorProto.Instance.prototype;
+	behinstProto.onCreate = function()
+	{
+		this.activeAtStart = this.properties[0] === 1;
+		this.setMaxOpacity = false;					// used to retrieve maxOpacity once in first 'Start fade' action if initially inactive
+		this.fadeInTime = this.properties[1];
+		this.waitTime = this.properties[2];
+		this.fadeOutTime = this.properties[3];
+		this.destroy = this.properties[4];			// 0 = no, 1 = after fade out
+		this.stage = this.activeAtStart ? 0 : 3;		// 0 = fade in, 1 = wait, 2 = fade out, 3 = done
+		if (this.recycled)
+			this.stageTime.reset();
+		else
+			this.stageTime = new cr.KahanAdder();
+		this.maxOpacity = (this.inst.opacity ? this.inst.opacity : 1.0);
+		if (this.activeAtStart)
+		{
+			if (this.fadeInTime === 0)
+			{
+				this.stage = 1;
+				if (this.waitTime === 0)
+					this.stage = 2;
+			}
+			else
+			{
+				this.inst.opacity = 0;
+				this.runtime.redraw = true;
+			}
+		}
+	};
+	behinstProto.saveToJSON = function ()
+	{
+		return {
+			"fit": this.fadeInTime,
+			"wt": this.waitTime,
+			"fot": this.fadeOutTime,
+			"s": this.stage,
+			"st": this.stageTime.sum,
+			"mo": this.maxOpacity,
+		};
+	};
+	behinstProto.loadFromJSON = function (o)
+	{
+		this.fadeInTime = o["fit"];
+		this.waitTime = o["wt"];
+		this.fadeOutTime = o["fot"];
+		this.stage = o["s"];
+		this.stageTime.reset();
+		this.stageTime.sum = o["st"];
+		this.maxOpacity = o["mo"];
+	};
+	behinstProto.tick = function ()
+	{
+		this.stageTime.add(this.runtime.getDt(this.inst));
+		if (this.stage === 0)
+		{
+			this.inst.opacity = (this.stageTime.sum / this.fadeInTime) * this.maxOpacity;
+			this.runtime.redraw = true;
+			if (this.inst.opacity >= this.maxOpacity)
+			{
+				this.inst.opacity = this.maxOpacity;
+				this.stage = 1;	// wait stage
+				this.stageTime.reset();
+				this.runtime.trigger(cr.behaviors.Fade.prototype.cnds.OnFadeInEnd, this.inst);
+			}
+		}
+		if (this.stage === 1)
+		{
+			if (this.stageTime.sum >= this.waitTime)
+			{
+				this.stage = 2;	// fade out stage
+				this.stageTime.reset();
+				this.runtime.trigger(cr.behaviors.Fade.prototype.cnds.OnWaitEnd, this.inst);
+			}
+		}
+		if (this.stage === 2)
+		{
+			if (this.fadeOutTime !== 0)
+			{
+				this.inst.opacity = this.maxOpacity - ((this.stageTime.sum / this.fadeOutTime) * this.maxOpacity);
+				this.runtime.redraw = true;
+				if (this.inst.opacity < 0)
+				{
+					this.inst.opacity = 0;
+					this.stage = 3;	// done
+					this.stageTime.reset();
+					this.runtime.trigger(cr.behaviors.Fade.prototype.cnds.OnFadeOutEnd, this.inst);
+					if (this.destroy === 1)
+						this.runtime.DestroyInstance(this.inst);
+				}
+			}
+		}
+	};
+	behinstProto.doStart = function ()
+	{
+		this.stage = 0;
+		this.stageTime.reset();
+		if (this.fadeInTime === 0)
+		{
+			this.stage = 1;
+			if (this.waitTime === 0)
+				this.stage = 2;
+		}
+		else
+		{
+			this.inst.opacity = 0;
+			this.runtime.redraw = true;
+		}
+	};
+	function Cnds() {};
+	Cnds.prototype.OnFadeOutEnd = function ()
+	{
+		return true;
+	};
+	Cnds.prototype.OnFadeInEnd = function ()
+	{
+		return true;
+	};
+	Cnds.prototype.OnWaitEnd = function ()
+	{
+		return true;
+	};
+	behaviorProto.cnds = new Cnds();
+	function Acts() {};
+	Acts.prototype.StartFade = function ()
+	{
+		if (!this.activeAtStart && !this.setMaxOpacity)
+		{
+			this.maxOpacity = (this.inst.opacity ? this.inst.opacity : 1.0);
+			this.setMaxOpacity = true;
+		}
+		if (this.stage === 3)
+			this.doStart();
+	};
+	Acts.prototype.RestartFade = function ()
+	{
+		this.doStart();
+	};
+	Acts.prototype.SetFadeInTime = function (t)
+	{
+		if (t < 0)
+			t = 0;
+		this.fadeInTime = t;
+	};
+	Acts.prototype.SetWaitTime = function (t)
+	{
+		if (t < 0)
+			t = 0;
+		this.waitTime = t;
+	};
+	Acts.prototype.SetFadeOutTime = function (t)
+	{
+		if (t < 0)
+			t = 0;
+		this.fadeOutTime = t;
+	};
+	behaviorProto.acts = new Acts();
+	function Exps() {};
+	Exps.prototype.FadeInTime = function (ret)
+	{
+		ret.set_float(this.fadeInTime);
+	};
+	Exps.prototype.WaitTime = function (ret)
+	{
+		ret.set_float(this.waitTime);
+	};
+	Exps.prototype.FadeOutTime = function (ret)
+	{
+		ret.set_float(this.fadeOutTime);
+	};
+	behaviorProto.exps = new Exps();
+}());
+;
+;
 cr.behaviors.Pin = function(runtime)
 {
 	this.runtime = runtime;
@@ -23352,56 +24355,81 @@ cr.behaviors.solid = function(runtime)
 	behaviorProto.acts = new Acts();
 }());
 cr.getObjectRefTable = function () { return [
-	cr.plugins_.AJAX,
 	cr.plugins_.Arr,
 	cr.plugins_.Audio,
-	cr.plugins_.Keyboard,
 	cr.plugins_.Mouse,
-	cr.plugins_.TextBox,
+	cr.plugins_.Keyboard,
 	cr.plugins_.Text,
 	cr.plugins_.Touch,
+	cr.plugins_.WebStorage,
 	cr.plugins_.Sprite,
+	cr.plugins_.Spritefont2,
 	cr.behaviors.Pin,
+	cr.behaviors.DragnDrop,
 	cr.behaviors.solid,
+	cr.behaviors.Fade,
 	cr.plugins_.Touch.prototype.cnds.OnTouchObject,
 	cr.plugins_.Sprite.prototype.acts.SetAnim,
 	cr.system_object.prototype.acts.Wait,
 	cr.plugins_.Sprite.prototype.acts.SetPos,
+	cr.plugins_.Sprite.prototype.cnds.CompareX,
+	cr.plugins_.Sprite.prototype.cnds.CompareY,
 	cr.system_object.prototype.acts.GoToLayout,
 	cr.plugins_.Sprite.prototype.acts.Destroy,
 	cr.system_object.prototype.cnds.IsGroupActive,
 	cr.system_object.prototype.cnds.CompareVar,
 	cr.system_object.prototype.acts.SetVar,
 	cr.plugins_.Touch.prototype.cnds.OnTapGestureObject,
-	cr.plugins_.Sprite.prototype.cnds.CompareX,
 	cr.plugins_.Sprite.prototype.acts.SetVisible,
 	cr.plugins_.Sprite.prototype.acts.SetCollisions,
-	cr.system_object.prototype.cnds.OnLayoutStart,
 	cr.plugins_.Audio.prototype.acts.Play,
-	cr.plugins_.Audio.prototype.cnds.OnEnded,
+	cr.plugins_.Touch.prototype.cnds.OnDoubleTapGestureObject,
+	cr.system_object.prototype.cnds.OnLayoutStart,
+	cr.plugins_.Sprite.prototype.cnds.OnCollision,
+	cr.system_object.prototype.acts.SetGroupActive,
 	cr.plugins_.Sprite.prototype.cnds.IsAnimPlaying,
 	cr.system_object.prototype.cnds.Else,
 	cr.plugins_.Text.prototype.acts.SetText,
+	cr.plugins_.WebStorage.prototype.cnds.LocalStorageExists,
+	cr.plugins_.WebStorage.prototype.exps.LocalValue,
+	cr.plugins_.Arr.prototype.cnds.ArrForEach,
+	cr.plugins_.Arr.prototype.acts.SetX,
+	cr.plugins_.Arr.prototype.exps.CurX,
+	cr.system_object.prototype.exps["int"],
+	cr.system_object.prototype.exps.tokenat,
+	cr.plugins_.Arr.prototype.acts.Sort,
+	cr.system_object.prototype.cnds.Compare,
+	cr.plugins_.Arr.prototype.exps.At,
+	cr.plugins_.Arr.prototype.acts.Delete,
+	cr.plugins_.Arr.prototype.acts.Insert,
+	cr.system_object.prototype.cnds.ForEach,
+	cr.system_object.prototype.acts.SubVar,
+	cr.plugins_.WebStorage.prototype.acts.StoreLocal,
+	cr.system_object.prototype.acts.ResetGlobals,
 	cr.plugins_.Sprite.prototype.acts.SetInstanceVar,
 	cr.plugins_.Sprite.prototype.exps.AnimationName,
 	cr.plugins_.Sprite.prototype.cnds.CompareInstanceVar,
 	cr.system_object.prototype.cnds.EveryTick,
-	cr.system_object.prototype.cnds.ForEach,
 	cr.plugins_.Sprite.prototype.cnds.IsOverlapping,
+	cr.system_object.prototype.acts.SetLayerVisible,
 	cr.system_object.prototype.cnds.OnLayoutEnd,
 	cr.plugins_.Audio.prototype.acts.StopAll,
+	cr.plugins_.Spritefont2.prototype.acts.SetText,
 	cr.system_object.prototype.cnds.Every,
 	cr.system_object.prototype.acts.AddVar,
-	cr.plugins_.Text.prototype.acts.SetPos,
-	cr.plugins_.Sprite.prototype.acts.RotateTowardAngle,
-	cr.plugins_.Sprite.prototype.exps.Angle,
+	cr.plugins_.Touch.prototype.cnds.OnTapGesture,
 	cr.plugins_.Touch.prototype.cnds.IsInTouch,
+	cr.plugins_.Touch.prototype.cnds.IsTouchingObject,
 	cr.system_object.prototype.exps.lerp,
 	cr.plugins_.Sprite.prototype.exps.X,
 	cr.plugins_.Touch.prototype.exps.X,
 	cr.plugins_.Sprite.prototype.exps.Y,
 	cr.plugins_.Touch.prototype.exps.Y,
-	cr.plugins_.Sprite.prototype.cnds.OnCollision,
-	cr.system_object.prototype.acts.SetLayerVisible
+	cr.behaviors.DragnDrop.prototype.acts.SetEnabled,
+	cr.plugins_.Sprite.prototype.cnds.OnAnimFinished,
+	cr.system_object.prototype.exps.len,
+	cr.plugins_.Spritefont2.prototype.exps.Text,
+	cr.plugins_.Spritefont2.prototype.cnds.CompareText,
+	cr.plugins_.Spritefont2.prototype.acts.Destroy
 ];};
 
