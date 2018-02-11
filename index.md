@@ -16,7 +16,7 @@ tem dia q nem eu sei quem eu sou mas se vc quiser descobrir vai no [meu tt](twit
 ## Games
 1. [$](wesleylandia.github.io/$) é um jogo em que um rapazinho que sai pela cidade coletando moedas e ao final o jogador terá de tomar uma decisão sobre isso.
 2. [O Mistério da Casa 60](wesleylandia.github.io/Oficina2) é um jogo cheio de puzzles em que várias coisas se ligam com as outras.
-3. [Warriors War](leonardofelipe.github.io/WarriorsWar) é um jogo de estratégia em que voce tem de escolher os persoangens e as construções para lutar contra o adversario.
+3. [Warriors War](https://leonardofelipe.github.io/WarriorsWar/) é um jogo de estratégia em que voce tem de escolher os persoangens e as construções para lutar contra o adversario.
 4. [Cuide da sua boca]
 ## Artigos
 Olha artigo, artigo mesmo, nao tem nenhum ate agora, eh isto.  
