@@ -28,7 +28,7 @@ Olha artigo, artigo mesmo, nao tem nenhum ate agora, eh isto.
 ## Artes
 nao tenho um estilo certo de arte porque nao tenho muita habilidade para isso mas:  
 
-![]wesleylandia.github.io/blob/master/influence_map_meme_by_fox_orian.jpg
+![](wesleylandia.github.io/blob/master/influence_map_meme_by_fox_orian.jpg)
 
 ## Apresentações
 Olha de apresentação mesmo, eu fui pra Santa Cruz e Parnamirim bater copo, nao sei se é valido. No campus, eu bati copo lá tambem (https://www.youtube.com/watch?v=Gy5uhUjbOJc), alem de ter feito algumas apresentações como Nolan Bushnell, Linus Torvalds, Sapo do Brejo e uns outros. erresse.
