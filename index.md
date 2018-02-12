@@ -8,8 +8,11 @@ Nesta página tem todos (ou grande parte) os meus trabalhos no **Instituto Feder
 
 ## Who the hell is me?
 
-ai, eu sou um projeto de programador de jogos, tenho 17 anos mas finge-se que tenho 15. prefiro programar do que fazer arte.
-tem dia q nem eu sei quem eu sou mas se vc quiser descobrir vai no [meu tt](twitter.com/wesleylandia).
+ai, eu sou um projeto de programador de jogos, tenho 17 anos mas finge-se que tenho 15. prefiro programar do que fazer arte.  
+Contato: wesley.wmcc@hotmail.com  
+Instagram: euwesleyc  
+Facebook: @Deus me deu esta dádiva nao utilizar essa rede social  
+Twitter: nunca nem vi erresse  
 
 # Portifolio
 
@@ -18,25 +21,17 @@ tem dia q nem eu sei quem eu sou mas se vc quiser descobrir vai no [meu tt](twit
 2. [O Mistério da Casa 60](wesleylandia.github.io/Oficina2) é um jogo cheio de puzzles em que várias coisas se ligam com as outras.
 3. [Warriors War](https://leonardofelipe.github.io/WarriorsWar/) é um jogo de estratégia em que voce tem de escolher os persoangens e as construções para lutar contra o adversario.
 4. [Cuide da sua boca]
+
 ## Artigos
 Olha artigo, artigo mesmo, nao tem nenhum ate agora, eh isto.  
+
 ## Artes
+nao tenho um estilo certo de arte porque nao tenho muita habilidade para isso mas:
+![]wesleylandia.github.io/blob/master/influence_map_meme_by_fox_orian.jpg
 
 ## Apresentações
-Olha de apresentação mesmo, eu fui pra Santa Cruz e Parnamirim bater copo, nao sei se é valido. No campus, eu bati copo lá tambem, alem de ter feito algumas apresentações como Nolan Bushnell, Linus Torvalds, Sapo do Brejo,  
-## Produções
+Olha de apresentação mesmo, eu fui pra Santa Cruz e Parnamirim bater copo, nao sei se é valido. No campus, eu bati copo lá tambem (https://www.youtube.com/watch?v=Gy5uhUjbOJc), alem de ter feito algumas apresentações como Nolan Bushnell, Linus Torvalds, Sapo do Brejo e uns outros. erresse.
 
-
-//criando minha pag.
-
-pra começar, a gnt tem q saber q::
 * * * 
-** faz q o texto fique em negrito  
-__ deixa o texto italico  
-~~ ~~ deixa o texto riscado 
-#s uma ou mais hashtags criam capitulos ou sub
 
-* * *
-eh isto.
-
-
+eu acho que eh isto :)
