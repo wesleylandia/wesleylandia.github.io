@@ -26,7 +26,8 @@ Twitter: nunca nem vi erresse
 Olha artigo, artigo mesmo, nao tem nenhum ate agora, eh isto.  
 
 ## Artes
-nao tenho um estilo certo de arte porque nao tenho muita habilidade para isso mas:
+nao tenho um estilo certo de arte porque nao tenho muita habilidade para isso mas:  
+
 ![]wesleylandia.github.io/blob/master/influence_map_meme_by_fox_orian.jpg
 
 ## Apresentações
