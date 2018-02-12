@@ -8,7 +8,7 @@ Nesta página tem todos (ou grande parte) os meus trabalhos no **Instituto Feder
 
 ## Who the hell is me?
 
-ai, eu sou um projeto de programador de jogos, tenho 17 anos mas finge-se que tenho 15. prefiro programar do que fazer arte.  
+meu nome é wesley, sou um projeto de programador de jogos, tenho 17 anos mas finge-se que tenho 15. prefiro programar do que fazer arte.    
 Contato: wesley.wmcc@hotmail.com  
 Instagram: euwesleyc(www.instagram.com/euwesleyc)  
 Facebook: @Deus me deu esta dádiva nao utilizar essa rede social  
