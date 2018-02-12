@@ -10,7 +10,7 @@ Nesta página tem todos (ou grande parte) os meus trabalhos no **Instituto Feder
 
 ai, eu sou um projeto de programador de jogos, tenho 17 anos mas finge-se que tenho 15. prefiro programar do que fazer arte.  
 Contato: wesley.wmcc@hotmail.com  
-Instagram: euwesleyc  
+Instagram: euwesleyc (instagram.com/euwesleyc)  
 Facebook: @Deus me deu esta dádiva nao utilizar essa rede social  
 Twitter: nunca nem vi erresse  
 
@@ -30,8 +30,14 @@ nao tenho um estilo certo de arte porque nao tenho muita habilidade para isso ma
 ![](influence_map_meme_by_fox_orian.jpg)
 
 ## Apresentações
-Olha de apresentação mesmo, eu fui pra Santa Cruz e Parnamirim bater copo, nao sei se é valido. No campus, eu bati copo lá tambem (https://www.youtube.com/watch?v=Gy5uhUjbOJc), alem de ter feito algumas apresentações como Nolan Bushnell, Linus Torvalds, Sapo do Brejo e uns outros. erresse.
+Olha de apresentação mesmo, eu fui pra Santa Cruz e Parnamirim bater copo, nao sei se é valido. No campus, eu bati copo lá tambem (https://www.youtube.com/watch?v=Gy5uhUjbOJc), alem de ter feito algumas apresentações como Nolan Bushnell, Linus Torvalds, Sapo do Brejo e uns outros.
 
 * * * 
 
 eu acho que eh isto :)
+
+XOXO.  
+
+W.  
+
+**(ME CONTRATA EM NOME DE CRISTO REI)**
