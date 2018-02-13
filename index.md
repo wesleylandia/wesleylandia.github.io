@@ -8,13 +8,18 @@ Nesta página tem todos (ou grande parte) os meus trabalhos no **Instituto Feder
 
 ## Who the hell is me?
 
-meu nome é wesley, sou um projeto de programador de jogos, tenho 17 anos mas finge-se que tenho 15. prefiro programar do que fazer arte.  
-Meus jogos são feitos na plataforma Construct 2. Quando eu faço arte, geralmente é no Corel Draw. Também programo em C/C++.  
-Digamos que i able to talk in english also, so if u r interested in bilingual people and liked my github page u can contact me and hire me. (i got diploma to prove and time to talk with ya (if u want to hire me corse)).   
+meu nome é wesley, sou um projeto de programador de jogos, tenho 17 anos mas finge-se que tenho 15 e sou da primeira turma de Programaçao de Jogos Digitais do IFRN.
+* Meus jogos são feitos na plataforma Construct 2.
+* Quando eu faço arte, geralmente é no Corel Draw. 
+* Também programo em C/C++.  
+* Digamos que i able to talk in english also, so if u r interested in bilingual people and liked my github page u can contact me and hire me. (i got diploma to prove and time to talk with ya (if u want to hire me corse)).   
+
+* * *
 Contato: wesley.wmcc@hotmail.com  
 Instagram: euwesleyc(www.instagram.com/euwesleyc)  
 Facebook: @Deus me deu esta dádiva de nao utilizar essa rede social  
 Twitter: nunca nem vi erresse  
+* * * 
 
 # Portifolio
 
