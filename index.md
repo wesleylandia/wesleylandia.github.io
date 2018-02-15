@@ -29,7 +29,7 @@ Twitter: nunca nem vi erresse
 ![](VINICIUS.PNG)
 2. [O Mistério da Casa 60](wesleylandia.github.io/Oficina2) é um jogo cheio de puzzles em que várias coisas se ligam com as outras.
 ![](CASA.PNG)
-3. [Warriors War](https://leonardofelipe.github.io/WarriorsWar/) é um jogo de estratégia em que voce tem de escolher os persoangens e as construções para lutar contra o adversario.
+3. [Warriors War](https://leonardofelipe.github.io/WarriorsWar/) é um jogo de estratégia em que voce tem de escolher os persoangens e as construções para lutar contra o adversario.  
 ![](CLASH.PNG)
 4. [Cuidado com a boca](wesleylandia.github.io/CuidedasuaBoca/) é um jogo de conscientização de cáries e problemas bucais.
 ![](BOCA.PNG)
