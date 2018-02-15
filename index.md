@@ -24,11 +24,15 @@ Twitter: nunca nem vi erresse
 # Portifolio
 
 ## Games
-1. [$](wesleylandia.github.io/$) é um jogo em que um rapazinho que sai pela cidade coletando moedas e ao final o jogador terá de tomar uma decisão sobre isso.
-2. [O Mistério da Casa 60](wesleylandia.github.io/Oficina2) é um jogo cheio de puzzles em que várias coisas se ligam com as outras.
-3. [Warriors War](https://leonardofelipe.github.io/WarriorsWar/) é um jogo de estratégia em que voce tem de escolher os persoangens e as construções para lutar contra o adversario.
-4. [Cuidado com a boca](wesleylandia.github.io/CuidedasuaBoca/) é um jogo de conscientização de cáries e problemas bucais.
 
+1. [$](wesleylandia.github.io/$) é um jogo em que um rapazinho que sai pela cidade coletando moedas e ao final o jogador terá de tomar uma decisão sobre isso.
+![](VINICIUS.png)
+2. [O Mistério da Casa 60](wesleylandia.github.io/Oficina2) é um jogo cheio de puzzles em que várias coisas se ligam com as outras.
+![](CASA.png)
+3. [Warriors War](https://leonardofelipe.github.io/WarriorsWar/) é um jogo de estratégia em que voce tem de escolher os persoangens e as construções para lutar contra o adversario.
+![](CLASH.png)
+4. [Cuidado com a boca](wesleylandia.github.io/CuidedasuaBoca/) é um jogo de conscientização de cáries e problemas bucais.
+![](BOCA.png)
 ## Artigos
 Olha artigo, artigo mesmo, nao tem nenhum ate agora, eh isto.  
 
