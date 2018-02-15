@@ -26,13 +26,13 @@ Twitter: nunca nem vi erresse
 ## Games
 
 1. [$](wesleylandia.github.io/$) é um jogo em que um rapazinho que sai pela cidade coletando moedas e ao final o jogador terá de tomar uma decisão sobre isso.
-![](VINICIUS.png)
+![](VINICIUS.PNG)
 2. [O Mistério da Casa 60](wesleylandia.github.io/Oficina2) é um jogo cheio de puzzles em que várias coisas se ligam com as outras.
-![](CASA.png)
+![](CASA.PNG)
 3. [Warriors War](https://leonardofelipe.github.io/WarriorsWar/) é um jogo de estratégia em que voce tem de escolher os persoangens e as construções para lutar contra o adversario.
-![](CLASH.png)
+![](CLASH.PNG)
 4. [Cuidado com a boca](wesleylandia.github.io/CuidedasuaBoca/) é um jogo de conscientização de cáries e problemas bucais.
-![](BOCA.png)
+![](BOCA.PNG)
 ## Artigos
 Olha artigo, artigo mesmo, nao tem nenhum ate agora, eh isto.  
 
