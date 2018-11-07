@@ -9,24 +9,20 @@
 ## JOGOS
 
 # $
-<a href="https://wesleylandia.github.io/$/">Link do Jogo</a>
 
-![JOGO1] (https://github.com/wesleylandia/wesleylandia.github.io/blob/master/JOGO1.PNG)
-<p>
-</p>
+![JOGO1] (https://github.com/wesleylandia/wesleylandia.github.io/blob/master/JOGO1.PNG)(https://wesleylandia.github.io/$/)
+
 # Misterio da casa 60
-<a href="https://wesleylandia.github.io/Oficina2">Link do Jogo</a>
-![CASA] (https://github.com/wesleylandia/wesleylandia.github.io/blob/master/CASA.PNG)
-<p>
-</p>
+
+![CASA] (https://github.com/wesleylandia/wesleylandia.github.io/blob/master/CASA.PNG) (https://wesleylandia.github.io/Oficina2)
+
 # Warriors War
-<a href="https://leonardofelipe.github.io/Jogo3B/">Link do Jogo</a>
-![CLASH] (https://github.com/wesleylandia/wesleylandia.github.io/blob/master/CLASH.PNG)
-<p>
-</p>
+
+![CLASH] (https://github.com/wesleylandia/wesleylandia.github.io/blob/master/CLASH.PNG) (https://leonardofelipe.github.io/Jogo3B/)
+
 # Cuidado com a boca
-<a href="https://wesleylandia.github.io/CuidedasuaBoca/">Link do Jogo</a>
-![BOCA] (https://github.com/wesleylandia/wesleylandia.github.io/blob/master/BOCA.PNG)
+
+![BOCA] (https://github.com/wesleylandia/wesleylandia.github.io/blob/master/BOCA.PNG) (https://wesleylandia.github.io/CuidedasuaBoca/)
 
 ## PROJETOS/PESQUISAS
 - O processo de abstração da forma aplicada ao desenho: Uma investigação para a melhoria da comunicação de ideias entre a etapa de concepção e a etapa de produção de personagens de jogos digitais.
