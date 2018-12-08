@@ -6,13 +6,13 @@ layout: default
 # Quem sou eu  
 - Wesley Costa
 - 18 anos
-- Aluno de Programação de jogos digitais  
+- Programação de Jogos Digitais  
 - Email: wesley.wmcc@hotmail.com
 - Instagram: @ctrlwesley
 
 * * *
 
-# Games  
+# Jogos
 [Jogo 1: $](https://wesleylandia.github.io/$/) 
 ![JOGO1](https://github.com/wesleylandia/wesleylandia.github.io/blob/master/JOGO1.PNG)  
 
@@ -41,4 +41,5 @@ layout: default
 # Projetos
 
 - [A utilização de jogos digitais para promoção da alimentação saudável nas escolas.](wesleylandia.github.io/umdiacomcarlinha) 
+
 Orientador: Diogo Vale. Co-orientador: Marcelo de Barros Barbosa
