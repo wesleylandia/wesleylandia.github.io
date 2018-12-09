@@ -1,5 +1,5 @@
 ﻿{
-	"version": 1544283274,
+	"version": 1544319193,
 	"fileList": [
 		"data.js",
 		"c2runtime.js",
@@ -118,6 +118,8 @@
 		"images/livro-sheet0.png",
 		"images/livro-sheet1.png",
 		"images/livro-sheet2.png",
+		"images/livro-sheet3.png",
+		"images/livro-sheet4.png",
 		"images/comidas_joguinho-sheet0.png",
 		"images/comidas_joguinho-sheet1.png",
 		"images/comidas_joguinho2-sheet0.png",
