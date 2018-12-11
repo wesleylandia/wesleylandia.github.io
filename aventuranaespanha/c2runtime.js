@@ -3735,9 +3735,13 @@ quat4.str=function(a){return"["+a[0]+", "+a[1]+", "+a[2]+", "+a[3]+"]"};
 					"powerPreference": "high-performance",
 					"failIfMajorPerformanceCaveat": true
 				};
-				this.gl = (this.canvas.getContext("webgl2", attribs) ||
-						   this.canvas.getContext("webgl", attribs) ||
-						   this.canvas.getContext("experimental-webgl", attribs));
+				if (!this.isAndroid)
+					this.gl = this.canvas.getContext("webgl2", attribs);
+				if (!this.gl)
+				{
+					this.gl = (this.canvas.getContext("webgl", attribs) ||
+							   this.canvas.getContext("experimental-webgl", attribs));
+				}
 			}
 		}
 		catch (e) {
@@ -3937,7 +3941,7 @@ quat4.str=function(a){return"["+a[0]+", "+a[1]+", "+a[2]+", "+a[3]+"]"};
 		var isfullscreen = (document["mozFullScreen"] || document["webkitIsFullScreen"] || !!document["msFullscreenElement"] || document["fullScreen"] || this.isNodeFullscreen) && !this.isCordova;
 		if (!isfullscreen && this.fullscreen_mode === 0 && !force)
 			return;			// ignore size events when not fullscreen and not using a fullscreen-in-browser mode
-		if (isfullscreen && this.fullscreen_scaling > 0)
+		if (isfullscreen)
 			mode = this.fullscreen_scaling;
 		var dpr = this.devicePixelRatio;
 		if (mode >= 4)
@@ -3991,7 +3995,7 @@ quat4.str=function(a){return"["+a[0]+", "+a[1]+", "+a[2]+", "+a[3]+"]"};
 				}
 			}
 		}
-		else if (this.isNWjs && this.isNodeFullscreen && this.fullscreen_mode_set === 0)
+		else if (isfullscreen && mode === 0)
 		{
 			offx = Math.floor((w - this.original_width) / 2);
 			offy = Math.floor((h - this.original_height) / 2);
@@ -15083,14 +15087,13 @@ cr.system_object.prototype.loadFromJSON = function (o)
 		if (prevsol.select_all)
 		{
 			clonesol.select_all = true;
-			cr.clearArray(clonesol.else_instances);
 		}
 		else
 		{
 			clonesol.select_all = false;
 			cr.shallowAssignArray(clonesol.instances, prevsol.instances);
-			cr.shallowAssignArray(clonesol.else_instances, prevsol.else_instances);
 		}
+		cr.clearArray(clonesol.else_instances);
 	};
 	cr.type_popSol = function ()
 	{
@@ -23790,6 +23793,10 @@ cr.behaviors.Platform = function(runtime)
 			{
 				this.runtime.registerCollision(this.inst, collobj);
 			}
+			else if (this.runtime.pushOutSolidAxis(this.inst, this.downx, this.downy, this.inst.height / 2))
+			{
+				this.runtime.registerCollision(this.inst, collobj);
+			}
 			else if (this.runtime.pushOutSolidNearest(this.inst, Math.max(this.inst.width, this.inst.height) / 2))
 			{
 				this.runtime.registerCollision(this.inst, collobj);
@@ -24108,7 +24115,7 @@ cr.behaviors.Platform = function(runtime)
 			this.runtime.trigger(cr.behaviors.Platform.prototype.cnds.OnFall, this.inst);
 			this.animMode = ANIMMODE_FALLING;
 		}
-		if (floor_ || landed)
+		if ((floor_ || landed) && this.dy >= 0)
 		{
 			if (this.animMode === ANIMMODE_FALLING || landed || (jump && this.dy === 0))
 			{
@@ -24567,15 +24574,15 @@ cr.behaviors.solid = function(runtime)
 }());
 cr.getObjectRefTable = function () { return [
 	cr.plugins_.AJAX,
-	cr.plugins_.Audio,
 	cr.plugins_.Dictionary,
+	cr.plugins_.Audio,
 	cr.plugins_.Function,
-	cr.plugins_.Spritefont2,
-	cr.plugins_.XML,
 	cr.plugins_.Text,
-	cr.plugins_.Touch,
+	cr.plugins_.Spritefont2,
 	cr.plugins_.Sprite,
 	cr.plugins_.TiledBg,
+	cr.plugins_.Touch,
+	cr.plugins_.XML,
 	cr.behaviors.solid,
 	cr.behaviors.Platform,
 	cr.behaviors.scrollto,
