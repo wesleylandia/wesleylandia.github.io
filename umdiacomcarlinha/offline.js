@@ -1,5 +1,5 @@
 ﻿{
-	"version": 1544319193,
+	"version": 1544635842,
 	"fileList": [
 		"data.js",
 		"c2runtime.js",
@@ -141,6 +141,10 @@
 		"images/fim-sheet3.png",
 		"images/fim-sheet4.png",
 		"images/fim-sheet5.png",
+		"images/risco_info-sheet0.png",
+		"images/info_icon-sheet0.png",
+		"images/info_icon-sheet1.png",
+		"images/cad_jogos-sheet0.png",
 		"media/clique.m4a",
 		"media/clique.ogg",
 		"media/relogio.m4a",
