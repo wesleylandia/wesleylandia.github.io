@@ -5,9 +5,9 @@ layout: default
 * * *
 # Quem sou eu  
 - Wesley Costa
-- 18 anos
+- 20 anos
 - Programação de Jogos Digitais  
-- Email: wesley.wmcc@hotmail.com
+- Email: costamwesley@gmail.com | wesley.wmcc@hotmail.com
 - Instagram: @ctrlwesley
 
 * * *
@@ -23,7 +23,7 @@ layout: default
 ![CLASH](https://github.com/wesleylandia/wesleylandia.github.io/blob/master/fotos/CLASH.PNG)  
 
 [Jogo 4: Cuidando Da Sua Boca](https://wesleylandia.github.io/CuidedasuaBoca/)  
-![BOCA](https://github.com/wesleylandia/wesleylandia.github.io/blob/master/fotos/BOCA.PNG)  
+![BOCA.png](https://github.com/wesleylandia/wesleylandia.github.io/blob/master/fotos/BOCA.PNG)  
 
 * * *
 
